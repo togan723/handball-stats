@@ -62,7 +62,7 @@ function App() {
       {/* 試合スコア */}
       <h3 style={{ margin: "10px 0" }}>
         {date && `${date}`}<br />
-        近江兄弟社 ({own.goals}) - ({opp.goals}) {opponent || "？？？"}
+        近江兄弟社 ({own.goals} - {opp.goals}) {opponent || "？？？"}
       </h3>
 
       {/* チームカード 横並び */}
@@ -97,14 +97,46 @@ function App() {
               </div>
 
               {/* ボタン（色分け＆小さめ） */}
-              <div style={{ marginTop: "5px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
-                <button onClick={() => handleIncrement(team, "fast")} style={{ background: "#4da6ff", color: "white" }}>速攻</button>
-                <button onClick={() => handleIncrement(team, "set")} style={{ background: "#33cc33", color: "white" }}>セット</button>
-                <button onClick={() => handleIncrement(team, "on")} style={{ background: "#ff9933", color: "white" }}>枠内</button>
-                <button onClick={() => handleIncrement(team, "off")} style={{ background: "#999999", color: "white" }}>枠外</button>
+              <div
+                style={{
+                  marginTop: "5px",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "4px",
+                }}
+              >
+                <button
+                  onClick={() => handleIncrement(team, "fast")}
+                  style={{ background: "#4da6ff", color: "white" }}
+                >
+                  速攻
+                </button>
+                <button
+                  onClick={() => handleIncrement(team, "set")}
+                  style={{ background: "#33cc33", color: "white" }}
+                >
+                  セット
+                </button>
+                <button
+                  onClick={() => handleIncrement(team, "on")}
+                  style={{ background: "#ff9933", color: "white" }}
+                >
+                  枠内
+                </button>
+                <button
+                  onClick={() => handleIncrement(team, "off")}
+                  style={{ background: "#999999", color: "white" }}
+                >
+                  枠外
+                </button>
                 <button
                   onClick={() => handleIncrement(team, "goal")}
-                  style={{ gridColumn: "span 2", background: "red", color: "white", fontWeight: "bold" }}
+                  style={{
+                    gridColumn: "span 2",
+                    background: "red",
+                    color: "white",
+                    fontWeight: "bold",
+                  }}
                 >
                   ゴール
                 </button>
@@ -117,7 +149,14 @@ function App() {
       {/* リセット */}
       <button
         onClick={resetStats}
-        style={{ marginTop: "10px", padding: "5px", background: "#ff6666", border: "none", borderRadius: "5px", color: "white" }}
+        style={{
+          marginTop: "10px",
+          padding: "5px",
+          background: "#ff6666",
+          border: "none",
+          borderRadius: "5px",
+          color: "white",
+        }}
       >
         リセット
       </button>
