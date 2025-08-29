@@ -1,116 +1,113 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import "./App.css";
 
 function App() {
-  // チーム名と日付
   const [opponent, setOpponent] = useState("");
   const [date, setDate] = useState("");
-
-  // 自チームと相手チームのデータ
   const [stats, setStats] = useState({
-    self: { fast: 0, setplay: 0, shotIn: 0, shotOut: 0, goals: 0 },
-    opp: { fast: 0, setplay: 0, shotIn: 0, shotOut: 0, goals: 0 },
+    own: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+    opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
   });
 
-  // カウント処理
-  const add = (team, key) => {
+  const handleIncrement = (team, key) => {
     setStats((prev) => ({
       ...prev,
       [team]: { ...prev[team], [key]: prev[team][key] + 1 },
     }));
   };
 
-  // 計算
-  const calc = (team) => {
-    const d = stats[team];
-    const attacks = d.fast + d.setplay;
-    const shots = d.shotIn + d.shotOut;
-    const saves = d.shotIn - d.goals;
-    const success = shots > 0 ? ((d.goals / shots) * 100).toFixed(1) : 0;
-    const saveRate = d.shotIn > 0 ? ((saves / d.shotIn) * 100).toFixed(1) : 0;
-    return { attacks, shots, saves, success, saveRate };
+  const resetStats = () => {
+    setStats({
+      own: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+      opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+    });
+    setOpponent("");
+    setDate("");
   };
 
-  const self = calc("self");
-  const opp = calc("opp");
+  const calculate = (team) => {
+    const s = stats[team];
+    const totalAttacks = s.fast + s.set;
+    const totalShots = s.on + s.off;
+    const goals = s.goal;
+    const saves = s.on - goals;
+    const successRate = totalAttacks ? ((goals / totalAttacks) * 100).toFixed(1) : 0;
+    const saveRate = s.on ? ((saves / s.on) * 100).toFixed(1) : 0;
+    return { totalAttacks, totalShots, goals, saves, successRate, saveRate };
+  };
+
+  const own = calculate("own");
+  const opp = calculate("opp");
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        ハンドボール試合分析
-      </h1>
-
-      <div className="flex gap-4 mb-4">
+    <div style={{ fontFamily: "sans-serif", padding: "10px", textAlign: "center" }}>
+      <h1>ハンドボール 試合記録</h1>
+      <div style={{ marginBottom: "15px" }}>
         <input
-          className="border p-2 rounded w-1/2"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ marginRight: "10px" }}
+        />
+        <input
           type="text"
           placeholder="相手チーム名"
           value={opponent}
           onChange={(e) => setOpponent(e.target.value)}
         />
-        <input
-          className="border p-2 rounded w-1/2"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
       </div>
+      <h2>
+        {date && `${date} `}
+        近江兄弟社 vs {opponent || "？？？"}
+      </h2>
 
-      {["self", "opp"].map((team) => (
-        <div key={team} className="bg-white rounded-2xl shadow p-4 mb-6">
-          <h2 className="text-xl font-semibold mb-2">
-            {team === "self" ? "自チーム" : "相手チーム"}
-          </h2>
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <button
-              onClick={() => add(team, "fast")}
-              className="bg-blue-500 text-white rounded-xl p-2"
+      <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap" }}>
+        {["own", "opp"].map((team) => {
+          const s = calculate(team);
+          const isOwn = team === "own";
+          return (
+            <div
+              key={team}
+              style={{
+                border: "2px solid #ccc",
+                borderRadius: "10px",
+                padding: "15px",
+                margin: "10px",
+                width: "280px",
+                background: isOwn ? "#e6f0ff" : "#ffe6e6",
+              }}
             >
-              速攻 +
-            </button>
-            <button
-              onClick={() => add(team, "setplay")}
-              className="bg-blue-500 text-white rounded-xl p-2"
-            >
-              セットプレー +
-            </button>
-            <button
-              onClick={() => add(team, "shotIn")}
-              className="bg-green-500 text-white rounded-xl p-2"
-            >
-              枠内シュート +
-            </button>
-            <button
-              onClick={() => add(team, "shotOut")}
-              className="bg-green-500 text-white rounded-xl p-2"
-            >
-              枠外シュート +
-            </button>
-            <button
-              onClick={() => add(team, "goals")}
-              className="bg-red-500 text-white rounded-xl p-2"
-            >
-              ゴール +
-            </button>
-          </div>
+              <h3 style={{ fontSize: "20px", marginBottom: "10px" }}>
+                {isOwn ? "近江兄弟社" : opponent || "相手チーム"}
+              </h3>
+              <p><strong>総攻撃:</strong> <span style={{ fontSize: "22px" }}>{s.totalAttacks}</span></p>
+              <p><strong>シュート:</strong> <span style={{ fontSize: "22px" }}>{s.totalShots}</span></p>
+              <p><strong>ゴール:</strong> <span style={{ fontSize: "26px", color: "green" }}>{s.goals}</span></p>
+              <p><strong>成功率:</strong> <span style={{ fontSize: "22px" }}>{s.successRate}%</span></p>
+              <p><strong>セーブ率:</strong> <span style={{ fontSize: "22px" }}>{s.saveRate}%</span></p>
 
-          <div className="space-y-1 text-sm">
-            <p>攻撃回数: {self.attacks}</p>
-            <p>シュート本数: {self.shots}</p>
-            <p>ゴール数: {self.goals}</p>
-            <p>セーブ数: {self.saves}</p>
-            <p>攻撃成功率: {self.success}%</p>
-            <p>セーブ率: {self.saveRate}%</p>
-          </div>
-        </div>
-      ))}
-
-      <div className="mt-6 text-center text-gray-600">
-        {date && opponent && (
-          <p>
-            {date} vs {opponent}
-          </p>
-        )}
+              <div style={{ marginTop: "10px" }}>
+                <button onClick={() => handleIncrement(team, "fast")}>速攻</button>
+                <button onClick={() => handleIncrement(team, "set")}>セット</button>
+                <button onClick={() => handleIncrement(team, "on")}>枠内</button>
+                <button onClick={() => handleIncrement(team, "off")}>枠外</button>
+                <button
+                  onClick={() => handleIncrement(team, "goal")}
+                  style={{ marginLeft: "10px", background: "green", color: "white" }}
+                >
+                  ゴール
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
+      <button
+        onClick={resetStats}
+        style={{ marginTop: "20px", padding: "10px", background: "#ff9999", border: "none", borderRadius: "5px" }}
+      >
+        リセット
+      </button>
     </div>
   );
 }
