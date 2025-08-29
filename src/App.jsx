@@ -1,121 +1,123 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import "./App.css";
 
 function App() {
   const [opponent, setOpponent] = useState("");
   const [date, setDate] = useState("");
-
-  const [ownStats, setOwnStats] = useState({
-    fastBreak: 0,
-    setPlay: 0,
-    onTarget: 0,
-    offTarget: 0,
-    goals: 0,
+  const [stats, setStats] = useState({
+    own: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+    opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
   });
 
-  const [oppStats, setOppStats] = useState({
-    fastBreak: 0,
-    setPlay: 0,
-    onTarget: 0,
-    offTarget: 0,
-    goals: 0,
-  });
+  const handleIncrement = (team, key) => {
+    setStats((prev) => ({
+      ...prev,
+      [team]: { ...prev[team], [key]: prev[team][key] + 1 },
+    }));
+  };
 
   const resetStats = () => {
-    setOwnStats({ fastBreak: 0, setPlay: 0, onTarget: 0, offTarget: 0, goals: 0 });
-    setOppStats({ fastBreak: 0, setPlay: 0, onTarget: 0, offTarget: 0, goals: 0 });
+    setStats({
+      own: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+      opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
+    });
     setOpponent("");
     setDate("");
   };
 
-  const calcStats = (team) => {
-    const attacks = team.fastBreak + team.setPlay;
-    const shots = team.onTarget + team.offTarget;
-    const saves = team.onTarget - team.goals;
-    const successRate = attacks > 0 ? ((team.goals / attacks) * 100).toFixed(1) : 0;
-    const saveRate = team.onTarget > 0 ? ((saves / team.onTarget) * 100).toFixed(1) : 0;
-    return { attacks, shots, saves, successRate, saveRate };
+  const calculate = (team) => {
+    const s = stats[team];
+    const totalAttacks = s.fast + s.set;
+    const totalShots = s.on + s.off;
+    const goals = s.goal;
+    const saves = s.on - goals;
+    const successRate = totalAttacks ? ((goals / totalAttacks) * 100).toFixed(1) : 0;
+    const saveRate = s.on ? ((saves / s.on) * 100).toFixed(1) : 0;
+    return { totalAttacks, totalShots, goals, saves, successRate, saveRate };
   };
 
-  const own = calcStats(ownStats);
-  const opp = calcStats(oppStats);
-
-  const StatCard = ({ title, stats, setStats }) => (
-    <div className="bg-white shadow-md rounded-lg p-4 w-full sm:w-1/2">
-      <h2 className="text-lg font-bold mb-2">{title}</h2>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => setStats({ ...stats, fastBreak: stats.fastBreak + 1 })}
-          className="bg-blue-400 text-white p-2 rounded"
-        >
-          速攻 ({stats.fastBreak})
-        </button>
-        <button
-          onClick={() => setStats({ ...stats, setPlay: stats.setPlay + 1 })}
-          className="bg-green-400 text-white p-2 rounded"
-        >
-          セット ({stats.setPlay})
-        </button>
-        <button
-          onClick={() => setStats({ ...stats, onTarget: stats.onTarget + 1 })}
-          className="bg-orange-400 text-white p-2 rounded"
-        >
-          枠内 ({stats.onTarget})
-        </button>
-        <button
-          onClick={() => setStats({ ...stats, offTarget: stats.offTarget + 1 })}
-          className="bg-gray-400 text-white p-2 rounded"
-        >
-          枠外 ({stats.offTarget})
-        </button>
-        <button
-          onClick={() => setStats({ ...stats, goals: stats.goals + 1 })}
-          className="bg-red-500 text-white p-2 rounded col-span-2"
-        >
-          ゴール ({stats.goals})
-        </button>
-      </div>
-
-      <div className="mt-4 text-sm">
-        <p>総攻撃回数: {stats.fastBreak + stats.setPlay}</p>
-        <p>シュート本数: {stats.onTarget + stats.offTarget}</p>
-        <p>ゴール数: {stats.goals}</p>
-        <p>セーブ数: {stats.onTarget - stats.goals}</p>
-        <p>攻撃成功率: {calcStats(stats).successRate}%</p>
-        <p>セーブ率: {calcStats(stats).saveRate}%</p>
-      </div>
-    </div>
-  );
+  const own = calculate("own");
+  const opp = calculate("opp");
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
+    <div style={{ fontFamily: "sans-serif", padding: "5px", textAlign: "center" }}>
+      <h2>ハンドボール 試合記録</h2>
+
+      {/* 試合情報 */}
+      <div style={{ marginBottom: "10px" }}>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="border p-2 mr-2"
+          style={{ marginRight: "5px" }}
         />
         <input
           type="text"
           placeholder="相手チーム名"
           value={opponent}
           onChange={(e) => setOpponent(e.target.value)}
-          className="border p-2"
         />
-        <h1 className="text-xl font-bold mt-2">
-          {date && <>{date}<br /></>}
-          近江兄弟社 ({ownStats.goals}) - ({oppStats.goals}) {opponent || "相手チーム"}
-        </h1>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <StatCard title="🏠 近江兄弟社" stats={ownStats} setStats={setOwnStats} />
-        <StatCard title={`🆚 ${opponent || "相手チーム"}`} stats={oppStats} setStats={setOppStats} />
+      {/* 試合スコア */}
+      <h3 style={{ margin: "10px 0" }}>
+        {date && `${date}`}<br />
+        近江兄弟社 ({own.goals}) - ({opp.goals}) {opponent || "？？？"}
+      </h3>
+
+      {/* チームカード 横並び */}
+      <div style={{ display: "flex", gap: "5px" }}>
+        {["own", "opp"].map((team) => {
+          const s = calculate(team);
+          const isOwn = team === "own";
+          return (
+            <div
+              key={team}
+              style={{
+                flex: 1,
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                padding: "8px",
+                background: isOwn ? "#e6f0ff" : "#ffe6e6",
+              }}
+            >
+              <h4 style={{ marginBottom: "5px" }}>
+                {isOwn ? "近江兄弟社" : opponent || "相手チーム"}
+              </h4>
+
+              {/* スタッツ横並び */}
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                <div>攻撃 {s.totalAttacks}</div>
+                <div>シュート {s.totalShots}</div>
+                <div style={{ color: "green", fontWeight: "bold" }}>G {s.goals}</div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                <div>成功率 {s.successRate}%</div>
+                <div>セーブ率 {s.saveRate}%</div>
+              </div>
+
+              {/* ボタン（色分け＆小さめ） */}
+              <div style={{ marginTop: "5px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
+                <button onClick={() => handleIncrement(team, "fast")} style={{ background: "#4da6ff", color: "white" }}>速攻</button>
+                <button onClick={() => handleIncrement(team, "set")} style={{ background: "#33cc33", color: "white" }}>セット</button>
+                <button onClick={() => handleIncrement(team, "on")} style={{ background: "#ff9933", color: "white" }}>枠内</button>
+                <button onClick={() => handleIncrement(team, "off")} style={{ background: "#999999", color: "white" }}>枠外</button>
+                <button
+                  onClick={() => handleIncrement(team, "goal")}
+                  style={{ gridColumn: "span 2", background: "red", color: "white", fontWeight: "bold" }}
+                >
+                  ゴール
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {/* リセット */}
       <button
         onClick={resetStats}
-        className="mt-6 bg-black text-white px-4 py-2 rounded w-full"
+        style={{ marginTop: "10px", padding: "5px", background: "#ff6666", border: "none", borderRadius: "5px", color: "white" }}
       >
         リセット
       </button>
