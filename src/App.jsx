@@ -9,14 +9,21 @@ function App() {
     opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
   });
 
+  const [history, setHistory] = useState([]);
+
   const handleIncrement = (team, key) => {
+    setHistory([...history, { ...stats }]); // 履歴保存
     setStats((prev) => ({
       ...prev,
-      [team]: { ...prev[team], [key]: prev[team][key] + 1 },
+      [team]: {
+        ...prev[team],
+        [key]: prev[team][key] + 1,
+      },
     }));
   };
 
   const resetStats = () => {
+    setHistory([...history, { ...stats }]);
     setStats({
       own: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
       opp: { fast: 0, set: 0, on: 0, off: 0, goal: 0 },
@@ -25,15 +32,27 @@ function App() {
     setDate("");
   };
 
+  const handleUndo = () => {
+    if (history.length > 0) {
+      setStats(history[history.length - 1]);
+      setHistory(history.slice(0, -1));
+    }
+  };
+
   const calculate = (team) => {
     const s = stats[team];
     const totalAttacks = s.fast + s.set;
     const totalShots = s.on + s.off;
-    const goals = s.goal;
-    const saves = s.on - goals;
-    const successRate = totalAttacks ? ((goals / totalAttacks) * 100).toFixed(1) : 0;
+    const saves = s.on - s.goal;
+
+    // セーブされた率
     const saveRate = s.on ? ((saves / s.on) * 100).toFixed(1) : 0;
-    return { totalAttacks, totalShots, goals, saves, successRate, saveRate };
+
+    // シュートミス率（セーブ + 枠外）/ シュート
+    const missed = saves + s.off;
+    const missRate = totalShots ? ((missed / totalShots) * 100).toFixed(1) : 0;
+
+    return { totalAttacks, fast: s.fast, set: s.set, totalShots, saveRate, missRate };
   };
 
   const own = calculate("own");
@@ -59,17 +78,18 @@ function App() {
         />
       </div>
 
-      {/* 試合スコア */}
+      {/* スコア */}
       <h3 style={{ margin: "10px 0" }}>
         {date && `${date}`}<br />
-        近江兄弟社 ({own.goals} - {opp.goals}) {opponent || "？？？"}
+        近江兄弟社 ({stats.own.goal} - {stats.opp.goal}) {opponent || "？？？"}
       </h3>
 
-      {/* チームカード 横並び */}
+      {/* チームカード */}
       <div style={{ display: "flex", gap: "5px" }}>
         {["own", "opp"].map((team) => {
           const s = calculate(team);
           const isOwn = team === "own";
+
           return (
             <div
               key={team}
@@ -85,18 +105,19 @@ function App() {
                 {isOwn ? "近江兄弟社" : opponent || "相手チーム"}
               </h4>
 
-              {/* スタッツ横並び */}
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                <div>攻撃 {s.totalAttacks}</div>
-                <div>シュート {s.totalShots}</div>
-                <div style={{ color: "green", fontWeight: "bold" }}>G {s.goals}</div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                <div>成功率 {s.successRate}%</div>
-                <div>セーブ率 {s.saveRate}%</div>
+              {/* スタッツ */}
+              <div style={{ fontSize: "12px", lineHeight: "1.6" }}>
+                <div>
+                  攻撃回数 {s.totalAttacks}（{s.fast}/{s.set}）
+                </div>
+                <div>
+                  シュート {s.totalShots}（{stats[team].on}/{stats[team].off}）
+                </div>
+                <div>セーブされた率 {s.saveRate}%</div>
+                <div>シュートミス率 {s.missRate}%</div>
               </div>
 
-              {/* ボタン（色分け＆小さめ） */}
+              {/* ボタン */}
               <div
                 style={{
                   marginTop: "5px",
@@ -146,7 +167,7 @@ function App() {
         })}
       </div>
 
-      {/* リセット */}
+      {/* リセット & 戻る */}
       <button
         onClick={resetStats}
         style={{
@@ -159,6 +180,20 @@ function App() {
         }}
       >
         リセット
+      </button>
+      <button
+        onClick={handleUndo}
+        style={{
+          marginTop: "10px",
+          marginLeft: "5px",
+          padding: "5px",
+          background: "#9999ff",
+          border: "none",
+          borderRadius: "5px",
+          color: "white",
+        }}
+      >
+        戻る
       </button>
     </div>
   );
